@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multilingual Idiom Detector</title>
+
+    <style>
+        /* ----------- GLOBAL PAGE ----------- */
+        body {
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ----------- MAIN CARD ----------- */
+        .container {
+            width: 90%;
+            max-width: 650px;
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(18px);
+            box-shadow: 0px 8px 25px rgba(0,0,0,0.25);
+            color: white;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* ----------- INPUT AREA ----------- */
+        textarea {
+            width: 100%;
+            height: 110px;
+            font-size: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            outline: none;
+            resize: none;
+            margin-top: 15px;
+            font-family: inherit;
+            background: rgba(255,255,255,0.85);
+    	    display: block;
+            margin-left: -14px;
+            margin-right: -50px;
+        }
+
+        /* ----------- BUTTON ----------- */
+        button {
+            width: 100%;
+            margin-top: 18px;
+            padding: 14px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: black;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        button:hover {
+            transform: scale(1.03);
+            box-shadow: 0px 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ----------- RESULT BOX ----------- */
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.75);
+            color: black;
+            line-height: 1.6;
+            display: none;
+            animation: fadeIn 0.7s ease-out;
+        }
+
+        .idiom-word {
+            color: #d63031;
+            font-weight: bold;
+            background: yellow;
+            padding: 3px 6px;
+            border-radius: 5px;
+        }
+
+        /* ----------- LOADING TEXT ----------- */
+        #loading {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 16px;
+            display: none;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+    </style>
+</head>
+
+
+<body>
+<div style="
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 90%;
+    max-width: 850px;
+    color: white;
+    animation: fadeIn 1.2s ease-out;
+">
+    <h1 style="
+        margin: 0;
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: 1px;
+    ">
+        Discover the hidden stories behind every expression.
+    </h1>
+
+    <p style="
+        font-size: 15px;
+        margin-top: 10px;
+        line-height: 1.6;
+        opacity: 0.95;
+    ">
+        Every idiom carries a piece of history, culture, and emotion — a unique lens into how people 
+        around the world think and communicate. This tool helps you decode those expressions, revealing 
+        the deeper meaning behind every phrase you encounter.
+    </p>
+</div>
+
+
+<div class="container">
+    <h2>🌍 Multilingual Idiom Detector</h2>
+
+    <textarea id="sentence" placeholder="Type any sentence..."></textarea>
+
+    <button onclick="detectIdiom()">Detect Idiom</button>
+
+    <div id="loading">⏳ Analyzing...</div>
+
+    <div id="result"></div>
+</div>
+<footer style="
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 14px;
+    color: white;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    box-shadow: 0px -4px 15px rgba(0,0,0,0.2);
+">
+    © 2025 Multilingual Idiom Detector — Bridging cultures, one idiom at a time.
+</footer>
+
+
+
+
+<script>
+function highlightIdiom(text, idiom) {
+    const pattern = new RegExp(idiom, "gi");
+    return text.replace(pattern, match => `<span class='idiom-word'>${match}</span>`);
+}
+
+function detectIdiom() {
+    const sentence = document.getElementById("sentence").value.trim();
+    const resultBox = document.getElementById("result");
+    const loading = document.getElementById("loading");
+
+    if (!sentence) return;
+
+    resultBox.style.display = "none";
+    loading.style.display = "block";
+
+    fetch("/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sentence: sentence })
+    })
+    .then(res => res.json())
+    .then(data => {
+        loading.style.display = "none";
+
+        if (data.status === "not_found") {
+            resultBox.innerHTML = "❌ No idiom found.";
+            resultBox.style.display = "block";
+            return;
+        }
+
+        const highlightedText = highlightIdiom(sentence, data.idiom);
+
+        resultBox.innerHTML = `
+            <b>🟢 Idiom:</b> ${data.idiom}<br><br>
+            <b>📌 Your Sentence:</b><br> ${highlightedText}<br><br>
+            <b>💡 Literal Meaning:</b><br> ${data.literal}<br><br>
+            <b>✨ Figurative Meaning:</b><br> ${data.meaning}<br><br>
+            <b>📝 Example:</b><br> ${data.example}<br><br>
+            <b>🌐 Language Detected:</b> ${data.language}
+        `;
+        resultBox.style.display = "block";
+    });
+}
+</script>
+
+</body>
+</html>
